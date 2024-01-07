@@ -20,18 +20,21 @@ def extract_landmarks(frame):
     results = hands.process(frame_rgb)
 
     landmarks_data = []
-    num_hands = min(2, len(results.multi_hand_landmarks))
     combined_landmarks = []
-    for hand_idx in range(num_hands):
-        landmarks = []  # Initialize landmarks for each hand separately
-        hand_landmarks = results.multi_hand_landmarks[hand_idx]
-        for idx, landmark in enumerate(hand_landmarks.landmark):
-            landmark_data = [landmark.x, landmark.y]
-            if hasattr(landmark, 'z'):
-                landmark_data.append(landmark.z)
-            landmarks.extend(landmark_data)
-        landmarks_data.append(landmarks)
-        combined_landmarks.extend(landmarks)
+
+    if results is not None and results.multi_hand_landmarks is not None:
+        num_hands = min(2, len(results.multi_hand_landmarks))
+
+        for hand_idx in range(num_hands):
+            landmarks = []  
+            hand_landmarks = results.multi_hand_landmarks[hand_idx]
+            for idx, landmark in enumerate(hand_landmarks.landmark):
+                landmark_data = [landmark.x, landmark.y]
+                if hasattr(landmark, 'z'):
+                    landmark_data.append(landmark.z)
+                landmarks.extend(landmark_data)
+            landmarks_data.append(landmarks)
+            combined_landmarks.extend(landmarks)
 
     return combined_landmarks
 
