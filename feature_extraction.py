@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+from PyQt5.QtGui import QImage
 
 class HandLandmarksDetector:
     def __init__(self):

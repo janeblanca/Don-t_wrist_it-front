@@ -2,9 +2,10 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtGui import QPainter, QColor, QPen, QFont, QPixmap
 from PyQt5.QtCore import Qt, QRect
-import cv2
 
-from feature_extraction import HandLandmarksDetector
+
+from camera import Camera
+
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -12,10 +13,12 @@ class MyWindow(QWidget):
 
         # Set up the UI components
         self.init_ui()
+        # Disable maximized window
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowMaximizeButtonHint)
 
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowMaximizeButtonHint) # disable maximize window
-
-        self.show_camera = True
+        self.show_camera = False
+        self.camera = Camera(self)
+        self.timer = self.startTimer(1)
 
     def init_ui(self):
         self.setWindowTitle("Don't Wrist It")
@@ -118,9 +121,11 @@ class MyWindow(QWidget):
         painter.drawText(self.width() - 420, 295, 450, self.height(), Qt.AlignLeft, "Setting-up your Camera")
 
        # Camera
-        self.cam_holder(painter)
-        if self.show_camera:
-            self.cam_draw(painter)
+        self.camera.cam_container(painter)
+        if self.camera.cam_placeholder:
+            self.camera.cam_holder(painter)
+        else:
+            self.camera.cam_draw(painter)
 
         #Worktime
         font_title = QFont()
@@ -139,39 +144,24 @@ class MyWindow(QWidget):
         image_audio = QPixmap("./src/audio_icon.png")
         painter.drawPixmap(136, self.height()-98, 27, 27,image_audio)
 
-    def cam_holder(self, painter):
-        painter.setPen(QPen(Qt.white, 0.5))
-        color = QColor("#3A606E")
-        color.setAlpha(100)
-        painter.setBrush(color)
-        camera_square = QRect(self.width() - 420, 330, 390, 350)
-        radius = 7
-        painter.drawRoundedRect(camera_square, radius, radius)
-
-    def cam_draw(self, painter):
-        image_cam = QPixmap("./src/cam.png")
-        image_cam_rect = QRect(self.width() - 380, 380, 300, 210)
-        painter.drawPixmap(image_cam_rect, image_cam)
-        click_font = QFont()
-        click_font.setPointSize(9)
-        painter.setFont(click_font)
-        painter.setPen(QColor("#ffffff"))
-        painter.drawText(self.width() - 445, 480, 450, 270, Qt.AlignCenter, "Click to set-up your camera")
-
     def mousePressEvent(self, event):
-        painter = QPainter(self)
         if event.button() == Qt.LeftButton:
             click_pos = event.pos()
             camera_rect = QRect(self.width() - 420, 330, 390, 350)
             if camera_rect.contains(click_pos):
-                self.show_camera = False
-                self.update()
-                detector = HandLandmarksDetector()
-                detector.detect_hand_landmarks()
-                self.perform_feature_extraction = True
-                self.update()
                 print("Clicked!")
+                self.camera.cam_placeholder = not self.camera.cam_placeholder
+                self.update()
         super().mousePressEvent(event)
+
+    def timerEvent(self, event):
+        if event.timerId() == self.timer:
+            self.camera.update()
+
+    def closeEvent(self, event):
+        self.camera.release_camera()
+        event.accept()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
