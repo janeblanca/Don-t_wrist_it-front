@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget,  QLineEdit, QLabel, QPushButton, QMessageBox
 from PyQt5.QtGui import QPainter, QColor, QPen, QFont, QPixmap, QIntValidator
 from PyQt5.QtCore import Qt, QRect
+from plyer import notification
 import cv2
 
 from camera import Camera
@@ -317,8 +318,6 @@ class MyWindow(QWidget):
         painter.setPen(QColor("#303030"))
         painter.drawText(335, 390, 450, 270, Qt.AlignLeft, "Reminder")
 
-
-
         # Camera
         self.camera.cam_container(painter)
         if self.camera.cam_placeholder:
@@ -383,6 +382,8 @@ class MyWindow(QWidget):
                     if self.break_interval == 0:
                         self.break_interval_active = False
                         self.break_time = self.original_break_time
+                        self.show_notification("Take a Break!", "Do Wrist Exercises!")
+
 
             else:
                 if self.break_time > 0:
@@ -392,6 +393,7 @@ class MyWindow(QWidget):
                         self.break_interval_active = True
                         self.total_work_time += self.original_break_interval  # Add to total work time
                         self.break_interval = self.original_break_interval
+                        self.show_notification("Break Time Over", "Back to work!")
 
             self.update()
 
@@ -472,6 +474,13 @@ class MyWindow(QWidget):
         except ValueError:
             print("Invalid input. Please enter a valid integer for break time and interval.")
 
+    def show_notification(self, title, message):
+        notification.notify(
+            title=title,
+            message=message,
+            app_name="Don't Wrist It",
+            timeout=10  # Notification will disappear after 10 seconds
+        )
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
