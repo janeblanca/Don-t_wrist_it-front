@@ -28,6 +28,8 @@ class Camera:
             frame_with_landmarks = landmarks_detector.draw_landmarks(frame)
             landmarks = landmarks_detector.extract_landmarks(frame)
 
+            print(landmarks)
+
             # Reshaping the extracted landmarks to fit into the model
             landmarks_arr = np.array(landmarks)
             reshaped_landmarks = landmarks_arr.reshape((1, 1, landmarks_arr.shape[0]))
@@ -37,7 +39,7 @@ class Camera:
             h, w, ch = frame.shape
             bytes_per_line = ch * w
             landmarks_image = QImage(frame_with_landmarks.data, w, h, bytes_per_line, QImage.Format_RGB888)
-            dest_rect = QRect(870, 370, 370, 270)
+            dest_rect = QRect(790, 370, 370, 270)
             painter.drawImage(dest_rect, landmarks_image.scaled(dest_rect.size(), Qt.KeepAspectRatio))
 
     def cam_holder(self, painter):

@@ -1,10 +1,11 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget,  QLineEdit, QLabel, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget,  QLineEdit, QLabel, QPushButton, QMessageBox
 from PyQt5.QtGui import QPainter, QColor, QPen, QFont, QPixmap, QIntValidator
 from PyQt5.QtCore import Qt, QRect
 import cv2
 
 from camera import Camera
+from cam_permission import CamPermission
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -16,6 +17,7 @@ class MyWindow(QWidget):
         # Disable maximized window
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowMaximizeButtonHint)
 
+        #  Camera
         self.show_camera = False
         self.camera = Camera(self)
         self.timer = self.startTimer(1)
@@ -269,11 +271,20 @@ class MyWindow(QWidget):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             click_pos = event.pos()
-            camera_rect = QRect(self.width() - 420, 330, 390, 350)
-            if camera_rect.contains(click_pos):
-                print("Clicked!")
-                self.camera.cam_placeholder = not self.camera.cam_placeholder
-                self.update()
+            camera_container = QRect(self.width() - 420, 330, 390, 350)
+            if camera_container.contains(click_pos):
+                # Call CamPermission class to display Message Box
+                message_box = CamPermission()
+                result = message_box.exec_()
+                # Click "Allow" or "Don't Allow"
+                if result == QMessageBox.Yes:
+                    print("Camera access allowed")
+                    self.camera.cam_placeholder = False
+                    self.update()
+                else:
+                    self.camera.cam_placeholder = True
+                    print("Camera access denied.")
+
         super().mousePressEvent(event)
 
     def timerEvent(self, event):
@@ -292,7 +303,6 @@ class MyWindow(QWidget):
             print(f"Break time set to {self.break_time} minutes.")
         except ValueError:
             print("Invalid input. Please enter a valid integer for break time.")
-
 
 
 if __name__ == '__main__':
