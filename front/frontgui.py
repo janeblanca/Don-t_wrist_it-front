@@ -40,8 +40,11 @@ class MyWindow(QWidget):
         self.original_break_interval = 0
         self.total_break_interval = 0
         self.total_work_time = 0
-        self.break_interval_active = True
+        self.break_interval_active = False
         self.initial_run = True
+
+        self.set_break_interval()
+        self.start_timer()
 
     def init_ui(self):
         self.setWindowTitle("Don't Wrist It")
@@ -316,31 +319,23 @@ class MyWindow(QWidget):
             self.camera.update()
 
             if self.break_interval_active:
-                # Update break time if it's active
-                if self.break_time > 0:
-                    self.break_time -= 1
-
-                    if self.break_time == 0:
-                        # Break time is done, set break_interval_active to False
-                        self.break_interval_active = False
-                        # Reset break interval
-                        self.total_work_time += self.original_break_interval  # Add to total work time
-                        self.break_interval = self.original_break_interval
-
-                self.update()
-            else:
-                # Update break interval if it's not active
                 if self.break_interval > 0:
                     self.break_interval -= 1
 
                     if self.break_interval == 0:
-                        # Break interval is done, set break_interval_active to True
-                        self.break_interval_active = True
-                        # Reset break time
+                        self.break_interval_active = False
                         self.break_time = self.original_break_time
 
-                self.update()
+            else:
+                if self.break_time > 0:
+                    self.break_time -= 1
 
+                    if self.break_time == 0:
+                        self.break_interval_active = True
+                        self.total_work_time += self.original_break_interval  # Add to total work time
+                        self.break_interval = self.original_break_interval
+
+            self.update()
 
     def closeEvent(self, event):
         self.camera.release_camera()
@@ -367,6 +362,7 @@ class MyWindow(QWidget):
     def format_time(self, seconds):
         minutes, sec = divmod(seconds, 60)
         return f"{minutes:02d}:{sec:02d}"
+    
     def validate_inputs(self):
         try:
             self.break_time = int(self.user_input_break.text()) * 60  # Convert minutes to seconds
@@ -377,17 +373,19 @@ class MyWindow(QWidget):
             self.original_break_interval = self.break_interval
             print(f"Break interval set to {self.break_interval} seconds.")
 
-            # Start the timer here
-            self.start_timer()
-
             self.user_input_break.clear()
             self.user_input_interval.clear()
 
             self.user_input_break.setEnabled(False)
             self.user_input_interval.setEnabled(False)
 
+            # Start the timer here
+            self.break_interval_active = True
+            self.start_timer()
+
         except ValueError:
             print("Invalid input. Please enter valid integers for break time and break interval.")
+
 
     def start_timer(self):
         # Get the break time duration
@@ -396,18 +394,23 @@ class MyWindow(QWidget):
 
         try:
             self.break_time = int(break_time_str) * 60  # Convert minutes to seconds
-            self.break_interval = int(break_interval_str) * 60  # Convert minutes to seconds
+            self.original_break_time = self.break_time
 
-            print(f"Break time set to {self.break_time} seconds.")
-            print(f"Break interval set to {self.break_interval} seconds.")
+            # Check if break interval is set, then start the timer
+            if break_interval_str:
+                self.break_interval = int(break_interval_str) * 60  # Convert minutes to seconds
+                self.original_break_interval = self.break_interval
 
-            self.user_input_break.clear()
-            self.user_input_interval.clear()
+                print(f"Break time set to {self.break_time} seconds.")
+                print(f"Break interval set to {self.break_interval} seconds.")
 
-            self.user_input_break.setEnabled(False)
-            self.user_input_interval.setEnabled(False)
+                self.user_input_break.clear()
+                self.user_input_interval.clear()
 
-            self.break_interval_active = True
+                self.user_input_break.setEnabled(False)
+                self.user_input_interval.setEnabled(False)
+
+                self.break_interval_active = True
 
         except ValueError:
             print("Invalid input. Please enter a valid integer for break time and interval.")
@@ -415,5 +418,8 @@ class MyWindow(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MyWindow()
+    window.set_break_interval()
+    window.start_timer()
+
     window.show()
     sys.exit(app.exec_())
