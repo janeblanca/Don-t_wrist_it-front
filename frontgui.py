@@ -18,20 +18,35 @@ class MyWindow(QWidget):
 
         self.show_camera = False
         self.camera = Camera(self)
-        self.timer = self.startTimer(1)
+        self.timer = self.startTimer(1000)
 
-        #
-        self.user_input = QLineEdit(self)
-        self.user_input.setGeometry(355, 195, 50, 40)
-        self.user_input.setStyleSheet( "background-color: #f3f1ec; border: none; color: #303030; font-size: 30px;")
+        # Break Time Input
+        self.user_input_break = QLineEdit(self)
+        self.user_input_break.setGeometry(355, 195, 50, 30)
+        self.user_input_break.setStyleSheet("background-color: #f3f1ec; border: none; color: #303030; font-size: 14px;")
+        self.user_input_break.setValidator(QIntValidator())
 
-        # accept integers only
-        int_validator = QIntValidator()
-        self.user_input.setValidator(int_validator)
+        # Break Interval Input
+        self.user_input_interval = QLineEdit(self)
+        self.user_input_interval.setGeometry(565, 195, 50, 30)
+        self.user_input_interval.setStyleSheet(
+            "background-color: #f3f1ec; border: none; color: #303030; font-size: 14px;")
+        self.user_input_interval.setValidator(QIntValidator())
 
+        self.user_input_break.returnPressed.connect(self.validate_inputs)
+        self.user_input_interval.returnPressed.connect(self.validate_inputs)
 
-        self.user_input.returnPressed.connect(self.set_break_time)
         self.break_time = 0
+        self.break_interval = 0
+        self.original_break_time = 0
+        self.original_break_interval = 0
+        self.total_break_interval = 0
+        self.total_work_time = 0
+        self.break_interval_active = False
+        self.initial_run = True
+
+        self.set_break_interval()
+        self.start_timer()
 
     def init_ui(self):
         self.setWindowTitle("Don't Wrist It")
@@ -76,9 +91,9 @@ class MyWindow(QWidget):
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(square_green_box, radius, radius)
 
-        # small square ICON (Worktime)
+        # small square (Worktime)
         painter.setBrush(QColor("#D0FFCF"))
-        square_green_box = QRect(118, self.height() - 475,105, 30)
+        square_green_box = QRect(185, self.height() - 583,105, 30)
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(square_green_box, radius, radius)
 
@@ -94,11 +109,29 @@ class MyWindow(QWidget):
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(square_blue_box, radius, radius)
 
-        # small square ICON (Breaktime)
+        # small square (Breaktime)
         painter.setBrush(QColor("#D0FBFF"))
-        square_blue_box = QRect(328, self.height() - 475, 105, 30)
+        square_blue_box = QRect(395, self.height() - 583, 105, 30)
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(square_blue_box, radius, radius)
+
+        # Display Total Work Time
+        font_counter = QFont()
+        font_counter.setPointSize(10)
+        painter.setFont(font_counter)
+        painter.setPen(QColor("#303030"))
+        total_work_time_text = f"Total Work Time: {self.format_time(self.total_work_time)}"
+
+        # Update the coordinates and size based on your layout
+        total_work_time_rect = QRect(105, 200, 200, 30)
+        painter.drawText(total_work_time_rect, Qt.AlignLeft, total_work_time_text)
+
+        # Display Break Time Counter
+        font_counter = QFont()
+        font_counter.setPointSize(10)
+        painter.setFont(font_counter)
+        painter.setPen(QColor("#303030"))
+        painter.drawText(330, 280, 150, 30, Qt.AlignLeft, f"Time left: {self.format_time(self.break_time)}")
 
         # BREAk INTERVAL
         painter.setBrush(QColor("#FFFFFF"))
@@ -112,17 +145,23 @@ class MyWindow(QWidget):
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(square_yellow_box, radius, radius)
 
-        # small square ICON (Break Interval)
+        # small square(Break Interval)
         painter.setBrush(QColor("#FFF7AE"))
-        square_yellow_box = QRect(539, self.height() - 475, 105, 30)
+        square_yellow_box = QRect(607, self.height() - 583, 105, 30)
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(square_yellow_box, radius, radius)
 
+        # Display Break Interval Counter
+        font_counter.setPointSize(10)  # Set a smaller font size
+        painter.setFont(font_counter)
+        painter.setPen(QColor("#303030"))
+        painter.drawText(540, 280, 150, 30, Qt.AlignLeft, f"Interval left: {self.format_time(self.break_interval)}")
+
         # WRIST POSITION
         painter.setBrush(QColor("#FFFFFF"))
-        worktime = QRect(105, 360, 200, 230)
+        wristposition= QRect(105, 360, 200, 230)
         radius = 8  # Set the radius for rounded corners
-        painter.drawRoundedRect(worktime, radius, radius)
+        painter.drawRoundedRect(wristposition, radius, radius)
 
         # Reminder
         painter.setBrush(QColor("#FFFFFF"))
@@ -136,7 +175,7 @@ class MyWindow(QWidget):
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(square_blue_box, radius, radius)
 
-        # small square ICON (Correct - Wrist Position)
+        # small square (Correct - Wrist Position)
         painter.setBrush(QColor("#D0FBFF"))
         square_blue_box = QRect(118, 496, 105, 30)
         radius = 8  # Set the radius for rounded corners
@@ -183,14 +222,38 @@ class MyWindow(QWidget):
         font_title.setPointSize(9)
         painter.setFont(font_title)
         painter.setPen(QColor("#303030"))
-        painter.drawText(134, 250, 450, 270, Qt.AlignLeft, "Work Time")
+        painter.drawText(203, self.height() - 577, 450, 270, Qt.AlignLeft, "Work Time")
+
+        # Descrption set time
+        font_title = QFont()
+        font_title.setPointSize(8)
+        painter.setFont(font_title)
+        painter.setPen(QColor("#303030"))
+        painter.drawText(122, 200, 450, 270, Qt.AlignLeft, "Set Time:")
+
+        # Descrption time remaining
+        font_title = QFont()
+        font_title.setPointSize(8)
+        painter.setFont(font_title)
+        painter.setPen(QColor("#303030"))
+        painter.drawText(122, 230, 450, 270, Qt.AlignLeft, "Time Remaining:")
+
+
+        #Descrption worktime
+        font_title = QFont()
+        font_title.setPointSize(8)
+        painter.setFont(font_title)
+        painter.setPen(QColor("#303030"))
+        painter.drawText(122, 280, 450, 270, Qt.AlignLeft, "This section presents the")
+        painter.drawText(122, 297, 450, 270, Qt.AlignLeft, "duration of engagement")
+        painter.drawText(122, 314, 450, 270, Qt.AlignLeft, "in your work.")
 
         # Breaktime
         font_title = QFont()
         font_title.setPointSize(9)
         painter.setFont(font_title)
         painter.setPen(QColor("#303030"))
-        painter.drawText(344, 250, 450, 270, Qt.AlignLeft, "Break Time")
+        painter.drawText(413, self.height() - 577, 450, 270, Qt.AlignLeft, "Break Time")
 
         font_title = QFont()
         font_title.setPointSize(7)
@@ -198,18 +261,38 @@ class MyWindow(QWidget):
         painter.setPen(QColor("#282828"))
         painter.drawText(420, 205, 400, 270, Qt.AlignLeft, "mins")
 
+        # Descrption breaktime
+        font_title = QFont()
+        font_title.setPointSize(8)
+        painter.setFont(font_title)
+        painter.setPen(QColor("#303030"))
+        painter.drawText(333, 280, 450, 270, Qt.AlignLeft, "This section shows the")
+        painter.drawText(333, 297, 450, 270, Qt.AlignLeft, "period of breaks the ")
+        painter.drawText(333, 314, 450, 270, Qt.AlignLeft, "individuals should take.")
+
+
+
         # Breakinterval
         font_title = QFont()
         font_title.setPointSize(9)
         painter.setFont(font_title)
         painter.setPen(QColor("#303030"))
-        painter.drawText(545, 250, 450, 270, Qt.AlignLeft, "Break Interval")
+        painter.drawText(613, self.height() - 577, 450, 270, Qt.AlignLeft, "Break Interval")
 
         font_title = QFont()
         font_title.setPointSize(7)
         painter.setFont(font_title)
         painter.setPen(QColor("#282828"))
         painter.drawText(630, 205, 400, 270, Qt.AlignLeft, "mins")
+
+        # Descrption breakinterval
+        font_title = QFont()
+        font_title.setPointSize(8)
+        painter.setFont(font_title)
+        painter.setPen(QColor("#303030"))
+        painter.drawText(545, 280, 450, 270, Qt.AlignLeft, "This section shows how")
+        painter.drawText(545, 297, 450, 270, Qt.AlignLeft, "often breaks should be")
+        painter.drawText(545, 314, 450, 270, Qt.AlignLeft, "taken.")
 
         # Wrist Position
         font_title = QFont()
@@ -231,6 +314,8 @@ class MyWindow(QWidget):
         painter.setFont(font_title)
         painter.setPen(QColor("#303030"))
         painter.drawText(335, 390, 450, 270, Qt.AlignLeft, "Reminder")
+
+
 
         # Camera
         self.camera.cam_container(painter)
@@ -280,18 +365,101 @@ class MyWindow(QWidget):
         if event.timerId() == self.timer:
             self.camera.update()
 
+            if self.break_interval_active:
+                if self.break_interval > 0:
+                    self.break_interval -= 1
+
+                    if self.break_interval == 0:
+                        self.break_interval_active = False
+                        self.break_time = self.original_break_time
+
+            else:
+                if self.break_time > 0:
+                    self.break_time -= 1
+
+                    if self.break_time == 0:
+                        self.break_interval_active = True
+                        self.total_work_time += self.original_break_interval  # Add to total work time
+                        self.break_interval = self.original_break_interval
+
+            self.update()
+
     def closeEvent(self, event):
         self.camera.release_camera()
         event.accept()
 
     def set_break_time(self):
-        # Get the break time duration
-        break_time_str = self.user_input.text()
+        break_time_str = self.user_input_break.text()
         try:
-            self.break_time = int(break_time_str)
-            print(f"Break time set to {self.break_time} minutes.")
+            self.break_time = int(break_time_str) * 60
+            print(f"Break time set to {self.break_time} seconds.")
+            self.user_input_break.clear()
         except ValueError:
             print("Invalid input. Please enter a valid integer for break time.")
+
+    def set_break_interval(self):
+        break_interval_str = self.user_input_interval.text()
+        try:
+            self.break_interval = int(break_interval_str) * 60  # Convert minutes to seconds
+            print(f"Break interval set to {self.break_interval} seconds.")
+            self.user_input_interval.clear()
+        except ValueError:
+            print("Invalid input. Please enter a valid integer for break interval.")
+
+    def format_time(self, seconds):
+        minutes, sec = divmod(seconds, 60)
+        return f"{minutes:02d}:{sec:02d}"
+
+    def validate_inputs(self):
+        try:
+            self.break_time = int(self.user_input_break.text()) * 60  # Convert minutes to seconds
+            self.original_break_time = self.break_time
+            print(f"Break time set to {self.break_time} seconds.")
+
+            self.break_interval = int(self.user_input_interval.text()) * 60  # Convert minutes to seconds
+            self.original_break_interval = self.break_interval
+            print(f"Break interval set to {self.break_interval} seconds.")
+
+            self.user_input_break.clear()
+            self.user_input_interval.clear()
+
+            self.user_input_break.setEnabled(False)
+            self.user_input_interval.setEnabled(False)
+
+            # Start the timer here
+            self.break_interval_active = True
+            self.start_timer()
+
+        except ValueError:
+            print("Invalid input. Please enter valid integers for break time and break interval.")
+
+    def start_timer(self):
+        # Get the break time duration
+        break_time_str = self.user_input_break.text()
+        break_interval_str = self.user_input_interval.text()
+
+        try:
+            self.break_time = int(break_time_str) * 60  # Convert minutes to seconds
+            self.original_break_time = self.break_time
+
+            # Check if break interval is set, then start the timer
+            if break_interval_str:
+                self.break_interval = int(break_interval_str) * 60  # Convert minutes to seconds
+                self.original_break_interval = self.break_interval
+
+                print(f"Break time set to {self.break_time} seconds.")
+                print(f"Break interval set to {self.break_interval} seconds.")
+
+                self.user_input_break.clear()
+                self.user_input_interval.clear()
+
+                self.user_input_break.setEnabled(False)
+                self.user_input_interval.setEnabled(False)
+
+                self.break_interval_active = True
+
+        except ValueError:
+            print("Invalid input. Please enter a valid integer for break time and interval.")
 
 
 
