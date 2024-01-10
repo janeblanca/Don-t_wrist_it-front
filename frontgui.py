@@ -84,19 +84,19 @@ class MyWindow(QWidget):
         # WORKTIME
         painter.setBrush(QColor("#FFFFFF"))
         # worktime = QRect(105, self.height() - 600, self.width() - 1000, self.height() - 520)
-        worktime= QRect(105, 115, 200, 230)
+        worktime = QRect(105, 115, 200, 230)
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(worktime, radius, radius)
 
         # small square ICON (Green Clock)
         painter.setBrush(QColor("#D0FFCF"))
-        square_green_box= QRect(119, self.height() - 593, 50, 50)
+        square_green_box = QRect(119, self.height() - 593, 50, 50)
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(square_green_box, radius, radius)
 
         # small square (Worktime)
         painter.setBrush(QColor("#D0FFCF"))
-        square_green_box = QRect(185, self.height() - 583,105, 30)
+        square_green_box = QRect(185, self.height() - 583, 105, 30)
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(square_green_box, radius, radius)
 
@@ -123,18 +123,16 @@ class MyWindow(QWidget):
         font_counter.setPointSize(10)
         painter.setFont(font_counter)
         painter.setPen(QColor("#303030"))
-        total_work_time_text = f"Total Work Time: {self.format_time(self.total_work_time)}"
+        painter.drawText(140, 200, 150, 30, Qt.AlignLeft, "Time Work Time:")
+        painter.drawText(180, 240, 150, 30, Qt.AlignLeft, f"{self.format_time(self.break_time)}")
 
-        # Update the coordinates and size based on your layout
-        total_work_time_rect = QRect(105, 200, 200, 30)
-        painter.drawText(total_work_time_rect, Qt.AlignLeft, total_work_time_text)
 
         # Display Break Time Counter
         font_counter = QFont()
         font_counter.setPointSize(10)
         painter.setFont(font_counter)
         painter.setPen(QColor("#303030"))
-        painter.drawText(330, 280, 150, 30, Qt.AlignLeft, f"Time left: {self.format_time(self.break_time)}")
+        painter.drawText(333, 240, 150, 30, Qt.AlignLeft, f"Time left: {self.format_time(self.break_time)}")
 
         # BREAk INTERVAL
         painter.setBrush(QColor("#FFFFFF"))
@@ -158,11 +156,11 @@ class MyWindow(QWidget):
         font_counter.setPointSize(10)  # Set a smaller font size
         painter.setFont(font_counter)
         painter.setPen(QColor("#303030"))
-        painter.drawText(540, 280, 150, 30, Qt.AlignLeft, f"Interval left: {self.format_time(self.break_interval)}")
+        painter.drawText(545, 240, 150, 30, Qt.AlignLeft, f"Interval left: {self.format_time(self.break_interval)}")
 
         # WRIST POSITION
         painter.setBrush(QColor("#FFFFFF"))
-        wristposition= QRect(105, 360, 200, 230)
+        wristposition = QRect(105, 360, 200, 230)
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(wristposition, radius, radius)
 
@@ -180,7 +178,7 @@ class MyWindow(QWidget):
 
         # small square (Correct - Wrist Position)
         painter.setBrush(QColor("#D0FBFF"))
-        square_blue_box = QRect(118, 496, 105, 30)
+        square_blue_box = QRect(183, 382, 105, 30)
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(square_blue_box, radius, radius)
 
@@ -226,21 +224,6 @@ class MyWindow(QWidget):
         painter.setFont(font_title)
         painter.setPen(QColor("#303030"))
         painter.drawText(203, self.height() - 577, 450, 270, Qt.AlignLeft, "Work Time")
-
-        # Descrption set time
-        font_title = QFont()
-        font_title.setPointSize(8)
-        painter.setFont(font_title)
-        painter.setPen(QColor("#303030"))
-        painter.drawText(122, 200, 450, 270, Qt.AlignLeft, "Set Time:")
-
-        # Descrption time remaining
-        font_title = QFont()
-        font_title.setPointSize(8)
-        painter.setFont(font_title)
-        painter.setPen(QColor("#303030"))
-        painter.drawText(122, 230, 450, 270, Qt.AlignLeft, "Time Remaining:")
-
 
         #Descrption worktime
         font_title = QFont()
@@ -302,14 +285,23 @@ class MyWindow(QWidget):
         font_title.setPointSize(9)
         painter.setFont(font_title)
         painter.setPen(QColor("#303030"))
-        painter.drawText(190, 390, 450, 270, Qt.AlignLeft, "Wrist Position")
+        painter.drawText(193, 388, 450, 270, Qt.AlignLeft, "Wrist Position")
 
         # Correct (Wrist Position)
         font_title = QFont()
         font_title.setPointSize(9)
         painter.setFont(font_title)
         painter.setPen(QColor("#303030"))
-        painter.drawText(149, 501, 450, 270, Qt.AlignLeft, "Correct")
+        painter.drawText(180, 470, 450, 270, Qt.AlignLeft, "Correct")
+
+        # Descrption wrist position
+        font_title = QFont()
+        font_title.setPointSize(8)
+        painter.setFont(font_title)
+        painter.setPen(QColor("#303030"))
+        painter.drawText(122, 540, 450, 270, Qt.AlignLeft, "This section displays the")
+        painter.drawText(122, 557, 450, 270, Qt.AlignLeft, "status of your wrist position")
+        #painter.drawText(122, 562, 450, 270, Qt.AlignLeft, "position.")
 
         # Reminder
         font_title = QFont()
