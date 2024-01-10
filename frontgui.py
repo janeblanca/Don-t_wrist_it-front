@@ -53,6 +53,8 @@ class MyWindow(QWidget):
 
         # Store Notification message
         self.notification_message = ""
+        self.notification_container = False
+        self.notifications = []
 
     def init_ui(self):
         self.setWindowTitle("Don't Wrist It")
@@ -260,8 +262,6 @@ class MyWindow(QWidget):
         painter.drawText(333, 297, 450, 270, Qt.AlignLeft, "period of breaks the ")
         painter.drawText(333, 314, 450, 270, Qt.AlignLeft, "individuals should take.")
 
-
-
         # Breakinterval
         font_title = QFont()
         font_title.setPointSize(9)
@@ -309,17 +309,33 @@ class MyWindow(QWidget):
 
         # Reminder
         font_title = QFont()
-        font_title.setPointSize(10)
+        font_title.setPointSize(11)
         painter.setFont(font_title)
         painter.setPen(QColor("#303030"))
-        painter.drawText(335, 390, 450, 270, Qt.AlignLeft, "Reminder")
+        painter.drawText(330, 380, 450, 270, Qt.AlignLeft, "Reminders")
+
+        reminder_icon = QPixmap("./src/notif-icon.png")
+        painter.drawPixmap(665, self.height() - 345, 45, 40, reminder_icon)
 
         # Notification message
-        font_notification = QFont()
-        font_notification.setPointSize(9)
-        painter.setFont(font_notification)
-        painter.setPen(QColor("#303030"))
-        painter.drawText(335, 420, 300, 100, Qt.AlignLeft | Qt.TextWordWrap, self.notification_message)
+        notification_top = 430
+        notification_height = 30
+        spacing = 10
+
+        # Show notification
+        if self.notification_container and self.notifications:
+            for index, message in enumerate(self.notifications):
+                notification_container = QRect(335, notification_top + (index * (notification_height + spacing)), 380,
+                                               notification_height)
+                painter.setBrush(QColor("#F5F5F5"))
+                painter.setPen(Qt.NoPen)
+                painter.drawRoundedRect(notification_container, 5, 5)
+
+                font_notification = QFont()
+                font_notification.setPointSize(10)
+                painter.setFont(font_notification)
+                painter.setPen(QColor("#303030"))
+                painter.drawText(notification_container, Qt.AlignLeft | Qt.TextWordWrap, message)
 
         # Camera
         self.camera.cam_container(painter)
@@ -478,17 +494,16 @@ class MyWindow(QWidget):
             print("Invalid input. Please enter a valid integer for break time and interval.")
 
     def show_notification(self, title, message):
-        if self.notification_message:
-            self.notification_message += "\n" + message
-        else:
-            self.notification_message = message
-
         notification.notify(
             title=title,
             message=message,
             app_name="Don't Wrist It",
-            timeout=10  # Notification will disappear after 10 seconds
+            timeout=10
         )
+
+        self.notifications.append(message)
+        self.notification_container = True
+        self.update()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
