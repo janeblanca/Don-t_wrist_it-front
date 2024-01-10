@@ -7,6 +7,7 @@ import cv2
 
 from camera import Camera
 from cam_permission import CamPermission
+from break_time import Break
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -22,6 +23,10 @@ class MyWindow(QWidget):
         self.show_camera = False
         self.camera = Camera(self)
         self.timer = self.startTimer(1000)
+
+
+        # Break
+        self.break_handler = Break(self)
 
         # Break Time Input
         self.user_input_break = QLineEdit(self)
@@ -403,7 +408,6 @@ class MyWindow(QWidget):
                         self.break_time = self.original_break_time
                         self.show_notification("Take a Break!", "Do Wrist Exercises!")
 
-
             else:
                 if self.break_time > 0:
                     self.break_time -= 1
@@ -421,77 +425,19 @@ class MyWindow(QWidget):
         event.accept()
 
     def set_break_time(self):
-        break_time_str = self.user_input_break.text()
-        try:
-            self.break_time = int(break_time_str) * 60
-            print(f"Break time set to {self.break_time} seconds.")
-            self.user_input_break.clear()
-        except ValueError:
-            print("Invalid input. Please enter a valid integer for break time.")
+        self.break_handler.set_break_time()
 
     def set_break_interval(self):
-        break_interval_str = self.user_input_interval.text()
-        try:
-            self.break_interval = int(break_interval_str) * 60  # Convert minutes to seconds
-            print(f"Break interval set to {self.break_interval} seconds.")
-            self.user_input_interval.clear()
-        except ValueError:
-            print("Invalid input. Please enter a valid integer for break interval.")
+        self.break_handler.set_break_interval()
 
     def format_time(self, seconds):
-        minutes, sec = divmod(seconds, 60)
-        return f"{minutes:02d}:{sec:02d}"
+        return self.break_handler.format_time(seconds)
 
     def validate_inputs(self):
-        try:
-            self.break_time = int(self.user_input_break.text()) * 60  # Convert minutes to seconds
-            self.original_break_time = self.break_time
-            print(f"Break time set to {self.break_time} seconds.")
-
-            self.break_interval = int(self.user_input_interval.text()) * 60  # Convert minutes to seconds
-            self.original_break_interval = self.break_interval
-            print(f"Break interval set to {self.break_interval} seconds.")
-
-            self.user_input_break.clear()
-            self.user_input_interval.clear()
-
-            self.user_input_break.setEnabled(False)
-            self.user_input_interval.setEnabled(False)
-
-            # Start the timer here
-            self.break_interval_active = True
-            self.start_timer()
-
-        except ValueError:
-            print("Invalid input. Please enter valid integers for break time and break interval.")
+        self.break_handler.validate_inputs()
 
     def start_timer(self):
-        # Get the break time duration
-        break_time_str = self.user_input_break.text()
-        break_interval_str = self.user_input_interval.text()
-
-        try:
-            self.break_time = int(break_time_str) * 60  # Convert minutes to seconds
-            self.original_break_time = self.break_time
-
-            # Check if break interval is set, then start the timer
-            if break_interval_str:
-                self.break_interval = int(break_interval_str) * 60  # Convert minutes to seconds
-                self.original_break_interval = self.break_interval
-
-                print(f"Break time set to {self.break_time} seconds.")
-                print(f"Break interval set to {self.break_interval} seconds.")
-
-                self.user_input_break.clear()
-                self.user_input_interval.clear()
-
-                self.user_input_break.setEnabled(False)
-                self.user_input_interval.setEnabled(False)
-
-                self.break_interval_active = True
-
-        except ValueError:
-            print("Invalid input. Please enter a valid integer for break time and interval.")
+        self.break_handler.start_timer()
 
     def show_notification(self, title, message):
         notification.notify(
@@ -504,6 +450,7 @@ class MyWindow(QWidget):
         self.notifications.append(message)
         self.notification_container = True
         self.update()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
