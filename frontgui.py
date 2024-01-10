@@ -51,6 +51,9 @@ class MyWindow(QWidget):
         self.set_break_interval()
         self.start_timer()
 
+        # Store Notification message
+        self.notification_message = ""
+
     def init_ui(self):
         self.setWindowTitle("Don't Wrist It")
         self.setStyleSheet("background-color: #f3f1ec;")
@@ -88,6 +91,7 @@ class MyWindow(QWidget):
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(worktime, radius, radius)
 
+
         # small square ICON (Green Clock)
         painter.setBrush(QColor("#D0FFCF"))
         square_green_box = QRect(119, self.height() - 593, 50, 50)
@@ -124,7 +128,7 @@ class MyWindow(QWidget):
         painter.setFont(font_counter)
         painter.setPen(QColor("#303030"))
         painter.drawText(140, 200, 150, 30, Qt.AlignLeft, "Time Work Time:")
-        painter.drawText(180, 240, 150, 30, Qt.AlignLeft, f"{self.format_time(self.break_time)}")
+        painter.drawText(180, 240, 150, 30, Qt.AlignLeft, f"{self.format_time(self.total_work_time)}")
 
 
         # Display Break Time Counter
@@ -305,10 +309,17 @@ class MyWindow(QWidget):
 
         # Reminder
         font_title = QFont()
-        font_title.setPointSize(9)
+        font_title.setPointSize(10)
         painter.setFont(font_title)
         painter.setPen(QColor("#303030"))
         painter.drawText(335, 390, 450, 270, Qt.AlignLeft, "Reminder")
+
+        # Notification message
+        font_notification = QFont()
+        font_notification.setPointSize(9)
+        painter.setFont(font_notification)
+        painter.setPen(QColor("#303030"))
+        painter.drawText(335, 420, 300, 100, Qt.AlignLeft | Qt.TextWordWrap, self.notification_message)
 
         # Camera
         self.camera.cam_container(painter)
@@ -467,6 +478,11 @@ class MyWindow(QWidget):
             print("Invalid input. Please enter a valid integer for break time and interval.")
 
     def show_notification(self, title, message):
+        if self.notification_message:
+            self.notification_message += "\n" + message
+        else:
+            self.notification_message = message
+
         notification.notify(
             title=title,
             message=message,
