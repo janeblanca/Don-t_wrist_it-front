@@ -25,15 +25,12 @@ class Camera:
         ret, frame = self.camera.read()
         if ret:
             # MediaPipe
-<<<<<<< HEAD
+
             landmarks_detector = HandLandmarksDetector()
             # frame_with_landmarks = landmarks_detector.draw_landmarks(frame)
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            landmarks = landmarks_detector.extract_landmarks(frame)
-=======
+            # landmarks = landmarks_detector.extract_landmarks(frame)
             landmarks = self.landmarks_detector.extract_landmarks(frame)
->>>>>>> a388f10154c0944c03c230141e7eec3ee24e94cc
-
             print(landmarks)
 
             # Reshaping the extracted landmarks to fit into the model
@@ -41,16 +38,13 @@ class Camera:
             reshaped_landmarks = landmarks_arr.reshape((1, 1, landmarks_arr.shape[0]))
 
             # Display in the desktop application
-<<<<<<< HEAD
             frame_with_landmarks = cv2.cvtColor(frame_rgb, cv2.COLOR_BGR2RGB)
             h, w, ch = frame.shape
-=======
             frame_with_landmarks = self.landmarks_detector.draw_landmarks(frame)
             frame_with_landmarks = cv2.cvtColor(frame_with_landmarks, cv2.COLOR_BGR2RGB)
 
             # Display the image directly without unnecessary conversions
             h, w, ch = frame_with_landmarks.shape
->>>>>>> a388f10154c0944c03c230141e7eec3ee24e94cc
             bytes_per_line = ch * w
             landmarks_image = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
             dest_rect = QRect(790, 370, 370, 270)

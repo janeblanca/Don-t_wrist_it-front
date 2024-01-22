@@ -12,7 +12,6 @@ class HandLandmarksDetector:
         )
         self.mp_drawing = mp.solutions.drawing_utils
 
-<<<<<<< HEAD
     # def draw_landmarks(self, frame):
     #     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     #     results = self.mp_hands.process(frame_rgb)
@@ -23,7 +22,7 @@ class HandLandmarksDetector:
     #                 frame, hand_landmarks, mp.solutions.hands.HAND_CONNECTIONS
     #             )
     #     return frame
-=======
+
     def draw_landmarks(self, frame):
         results = self.process_frame(frame)
         if results.multi_hand_landmarks:
@@ -32,7 +31,6 @@ class HandLandmarksDetector:
                     frame, hand_landmarks, mp.solutions.hands.HAND_CONNECTIONS
                 )
         return frame
->>>>>>> a388f10154c0944c03c230141e7eec3ee24e94cc
 
     def extract_landmarks(self, frame):
         results = self.process_frame(frame)

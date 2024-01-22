@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget,  QLineEdit, QLabel, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget,  QLineEdit, QMessageBox, QScrollArea, QVBoxLayout, QWidget, QLabel
 from PyQt5.QtGui import QPainter, QColor, QPen, QFont, QPixmap, QIntValidator
 from PyQt5.QtCore import Qt, QRect
 from plyer import notification
@@ -8,6 +8,7 @@ import cv2
 from camera import Camera
 from cam_permission import CamPermission
 from break_time import Break
+from ReminderMessage import ReminderWidget
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -24,6 +25,8 @@ class MyWindow(QWidget):
         self.camera = Camera(self)
         self.timer = self.startTimer(1000)
 
+        # Clicked camera button
+        self.button_clicked = False
 
         # Break
         self.break_handler = Break(self)
@@ -60,6 +63,19 @@ class MyWindow(QWidget):
         self.notification_message = ""
         self.notification_container = False
         self.notifications = []
+
+        # Notification Scroll Area
+        self.notification_scroll_area = QScrollArea(self)
+        self.notification_scroll_area.setGeometry(325, 420, 390, 160)
+        self.notification_scroll_area.setWidgetResizable(True)
+        self.notification_scroll_area.setStyleSheet("background-color: white; border: black;")
+
+        self.notification_container_widget = QWidget()
+        self.notification_scroll_area.setWidget(self.notification_container_widget)
+
+        self.notification_layout = QVBoxLayout(self.notification_container_widget)
+        self.notification_layout.setAlignment(Qt.AlignTop)
+        self.notification_layout.setSpacing(10)
 
     def init_ui(self):
         self.setWindowTitle("Don't Wrist It")
@@ -333,28 +349,12 @@ class MyWindow(QWidget):
         notification_height = 30
         spacing = 10
 
-        # Show notification
-        if self.notification_container and self.notifications:
-            for index, message in enumerate(self.notifications):
-                notification_container = QRect(335, notification_top + (index * (notification_height + spacing)), 380,
-                                               notification_height)
-                painter.setBrush(QColor("#F5F5F5"))
-                painter.setPen(Qt.NoPen)
-                painter.drawRoundedRect(notification_container, 5, 5)
-
-                font_notification = QFont()
-                font_notification.setPointSize(10)
-                painter.setFont(font_notification)
-                painter.setPen(QColor("#303030"))
-                painter.drawText(notification_container, Qt.AlignLeft | Qt.TextWordWrap, message)
-
         # Camera
         self.camera.cam_container(painter)
         if self.camera.cam_placeholder:
             self.camera.cam_holder(painter)
         else:
             self.camera.cam_draw(painter)
-
 
         #------------IMAGES----------
         # image LOGO
@@ -395,6 +395,7 @@ class MyWindow(QWidget):
                     print("Camera access allowed")
                     self.camera.cam_placeholder = False
                     self.update()
+                    self.button_clicked = True
                 else:
                     self.camera.cam_placeholder = True
                     print("Camera access denied.")
@@ -457,6 +458,13 @@ class MyWindow(QWidget):
         self.notifications.append(message)
         self.notification_container = True
         self.update()
+
+        notification_widget = ReminderWidget(message, font_height=10)
+        self.notification_layout.addWidget(notification_widget)
+        self.notification_container = True
+        self.notification_scroll_area.verticalScrollBar().setValue(
+            self.notification_scroll_area.verticalScrollBar().maximum()
+        )
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
