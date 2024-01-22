@@ -146,6 +146,8 @@ class MyWindow(QWidget):
         painter.drawText(333, 240, 150, 30, Qt.AlignLeft, f"Time left: {self.format_time(self.break_time)}")
 
         # BREAk INTERVAL
+        pen = QPen(QColor("#FFFFFF"), 0)
+        painter.setPen(pen)
         painter.setBrush(QColor("#FFFFFF"))
         breakinterval = QRect(529, 115, 200, 230)
         radius = 8  # Set the radius for rounded corners
@@ -170,12 +172,16 @@ class MyWindow(QWidget):
         painter.drawText(545, 240, 150, 30, Qt.AlignLeft, f"Interval left: {self.format_time(self.break_interval)}")
 
         # WRIST POSITION
+        pen = QPen(QColor("#FFFFFF"), 0)
+        painter.setPen(pen)
         painter.setBrush(QColor("#FFFFFF"))
         wristposition = QRect(105, 360, 200, 230)
         radius = 8  # Set the radius for rounded corners
         painter.drawRoundedRect(wristposition, radius, radius)
 
         # Reminder
+        pen = QPen(QColor("#FFFFFF"), 0)
+        painter.setPen(pen)
         painter.setBrush(QColor("#FFFFFF"))
         reminder = QRect(317, 360, self.width() - 788, 230)
         radius = 8  # Set the radius for rounded corners
