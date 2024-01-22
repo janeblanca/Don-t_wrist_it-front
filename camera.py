@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QPainter, QColor, QPen, QFont, QPixmap, QImage
+from PyQt5.QtGui import QColor, QPen, QFont, QPixmap, QImage
 from PyQt5.QtCore import Qt, QRect
 import cv2
 import numpy as np
@@ -8,7 +8,7 @@ from feature_extraction import HandLandmarksDetector
 class Camera:
     def __init__(self, parent):
         self.parent = parent
-        self.camera = cv2.VideoCapture(0)
+        self.camera = cv2.VideoCapture(1)
         self.cam_placeholder = True
         self.landmarks_detector = HandLandmarksDetector()
 
@@ -27,23 +27,23 @@ class Camera:
             # MediaPipe
 
             landmarks_detector = HandLandmarksDetector()
-            # frame_with_landmarks = landmarks_detector.draw_landmarks(frame)
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # landmarks = landmarks_detector.extract_landmarks(frame)
-            landmarks = self.landmarks_detector.extract_landmarks(frame)
-            print(landmarks)
+            landmarks = landmarks_detector.extract_landmarks(frame)
 
             # Reshaping the extracted landmarks to fit into the model
             landmarks_arr = np.array(landmarks)
             reshaped_landmarks = landmarks_arr.reshape((1, 1, landmarks_arr.shape[0]))
 
-            # Display in the desktop application
-            frame_with_landmarks = cv2.cvtColor(frame_rgb, cv2.COLOR_BGR2RGB)
-            h, w, ch = frame.shape
-            frame_with_landmarks = self.landmarks_detector.draw_landmarks(frame)
-            frame_with_landmarks = cv2.cvtColor(frame_with_landmarks, cv2.COLOR_BGR2RGB)
+            # if landmarks_arr.shape == (0,):
+            #     print("Align two hands to the camera.")
+            #
+            # elif landmarks.arr.shape == (63,):
+            #     print("Use your two hands to detect proper wrist positions")
+            #
+            # else:
+            #     print("You're using your two hands.")
 
-            # Display the image directly without unnecessary conversions
+            frame_with_landmarks = cv2.cvtColor(frame_rgb, cv2.COLOR_BGR2RGB)
             h, w, ch = frame_with_landmarks.shape
             bytes_per_line = ch * w
             landmarks_image = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)

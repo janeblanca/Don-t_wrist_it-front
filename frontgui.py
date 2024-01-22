@@ -415,7 +415,6 @@ class MyWindow(QWidget):
                         self.break_time = self.original_break_time
                         self.show_notification("Take a Break!", "Do Wrist Exercises!")
 
-
             else:
                 if self.break_time > 0:
                     self.break_time -= 1
