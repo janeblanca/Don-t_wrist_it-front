@@ -25,7 +25,8 @@ class Camera:
         if ret:
             # MediaPipe
             landmarks_detector = HandLandmarksDetector()
-            frame_with_landmarks = landmarks_detector.draw_landmarks(frame)
+            # frame_with_landmarks = landmarks_detector.draw_landmarks(frame)
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             landmarks = landmarks_detector.extract_landmarks(frame)
 
             print(landmarks)
@@ -35,10 +36,10 @@ class Camera:
             reshaped_landmarks = landmarks_arr.reshape((1, 1, landmarks_arr.shape[0]))
 
             # Display in the desktop application
-            frame_with_landmarks = cv2.cvtColor(frame_with_landmarks, cv2.COLOR_BGR2RGB)
+            frame_with_landmarks = cv2.cvtColor(frame_rgb, cv2.COLOR_BGR2RGB)
             h, w, ch = frame.shape
             bytes_per_line = ch * w
-            landmarks_image = QImage(frame_with_landmarks.data, w, h, bytes_per_line, QImage.Format_RGB888)
+            landmarks_image = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
             dest_rect = QRect(790, 370, 370, 270)
             painter.drawImage(dest_rect, landmarks_image.scaled(dest_rect.size(), Qt.KeepAspectRatio))
 
