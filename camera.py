@@ -32,6 +32,7 @@ class Camera:
 
             # Reshaping the extracted landmarks to fit into the model
             landmarks_arr = np.array(landmarks)
+            print(landmarks_arr.shape)
             reshaped_landmarks = landmarks_arr.reshape((1, 1, landmarks_arr.shape[0]))
 
             # if landmarks_arr.shape == (0,):

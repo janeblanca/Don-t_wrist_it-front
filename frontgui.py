@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget,  QLineEdit, QMessageBox, QScrollArea, QVBoxLayout, QWidget, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget,  QLineEdit, QMessageBox, QScrollArea, QVBoxLayout, QWidget
 from PyQt5.QtGui import QPainter, QColor, QPen, QFont, QPixmap, QIntValidator
 from PyQt5.QtCore import Qt, QRect
 from plyer import notification
@@ -9,6 +9,7 @@ from camera import Camera
 from cam_permission import CamPermission
 from break_time import Break
 from ReminderMessage import ReminderWidget
+
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -343,11 +344,6 @@ class MyWindow(QWidget):
 
         reminder_icon = QPixmap("./src/notif-icon.png")
         painter.drawPixmap(665, self.height() - 345, 45, 40, reminder_icon)
-
-        # Notification message
-        notification_top = 430
-        notification_height = 30
-        spacing = 10
 
         # Camera
         self.camera.cam_container(painter)
