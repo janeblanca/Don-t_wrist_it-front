@@ -1,14 +1,77 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget,  QLineEdit, QMessageBox, QScrollArea, QVBoxLayout, QWidget, QLabel
-from PyQt5.QtGui import QPainter, QColor, QPen, QFont, QPixmap, QIntValidator
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtWidgets import QMainWindow, QGraphicsScene, QGraphicsView, QApplication, QWidget,  QLineEdit, QMessageBox, QScrollArea, QVBoxLayout, QWidget, QLabel
+from PyQt5.QtGui import QPainter, QColor, QPen, QFont, QPixmap, QIntValidator, QImage
+from PyQt5.QtCore import Qt, QRect, QThread, pyqtSignal
 from plyer import notification
+from feature_extraction import HandLandmarksDetector
 import cv2
+import numpy as np
 
 from camera import Camera
 from cam_permission import CamPermission
 from break_time import Break
 from ReminderMessage import ReminderWidget
+
+class LandmarksThread(QThread):
+    landmarks_extracted = pyqtSignal(object)
+
+    def __init__(self, camera, landmarks_detector):
+        super().__init__()
+        self.camera = camera
+        self.landmarks_detector = landmarks_detector
+
+    def run(self):
+        while True:
+            ret, frame = self.camera.read()
+            if ret:
+                landmarks = self.landmarks_detector.extract_landmarks(frame)
+                self.landmarks_extracted.emit(landmarks)
+                self.msleep(100)  # Adjust sleep time as needed
+
+class CameraWindow(QMainWindow):
+    def __init__(self, camera):
+        super().__init__()
+        self.camera = camera
+        self.init_ui()
+        self.landmarks_detector = HandLandmarksDetector()
+
+        # Create and start the LandmarksThread
+        self.landmarks_thread = LandmarksThread(camera, self.landmarks_detector)
+        self.landmarks_thread.landmarks_extracted.connect(self.handle_landmarks)
+        self.landmarks_thread.start()
+
+    def init_ui(self):
+        self.setWindowTitle("Camera Display")
+        self.setGeometry(100, 100, 640, 480)
+
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+
+        layout = QVBoxLayout(central_widget)
+        
+        scene = QGraphicsScene(self)
+        view = QGraphicsView(scene)
+        layout.addWidget(view)
+
+        self.timer = self.startTimer(200)  # adjust the timer interval as needed
+
+    def timerEvent(self, event):
+        ret, frame = self.camera.read()
+        if ret:
+            height, width, channel = frame.shape
+            bytes_per_line = 3 * width
+            q_img = QPixmap.fromImage(QImage(frame.data, width, height, bytes_per_line, QImage.Format_RGB888))
+            scene = self.centralWidget().layout().itemAt(0).widget().scene()
+            scene.clear()
+            scene.addPixmap(q_img)
+
+    def closeEvent(self, event):
+        self.killTimer(self.timer)
+        self.camera.release()
+
+    def handle_landmarks(self, landmarks):
+        # Process landmarks here
+        print("Landmarks:", landmarks)
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -393,9 +456,12 @@ class MyWindow(QWidget):
                 # Click "Allow" or "Don't Allow"
                 if result == QMessageBox.Yes:
                     print("Camera access allowed")
-                    self.camera.cam_placeholder = False
-                    self.update()
                     self.button_clicked = True
+
+                    # Open a new window for the camera display
+                    self.camera = Camera(self)
+                    self.camera_window = CameraWindow(self.camera)
+                    self.camera_window.show()
                 else:
                     self.camera.cam_placeholder = True
                     print("Camera access denied.")
@@ -428,7 +494,7 @@ class MyWindow(QWidget):
             self.update()
 
     def closeEvent(self, event):
-        self.camera.release_camera()
+        #self.camera.release_camera()
         event.accept()
 
     def set_break_time(self):

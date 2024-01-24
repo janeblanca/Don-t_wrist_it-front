@@ -12,6 +12,10 @@ class Camera:
         self.cam_placeholder = True
         self.landmarks_detector = HandLandmarksDetector()
 
+    def read(self):
+        ret, frame = self.camera.read()
+        return ret, frame
+
     def cam_container(self, painter):
         painter.setPen(QPen(Qt.white, 0.5))
         color = QColor("#3A606E")
@@ -32,6 +36,7 @@ class Camera:
 
             # Reshaping the extracted landmarks to fit into the model
             landmarks_arr = np.array(landmarks)
+            print(landmarks_arr.shape)
             reshaped_landmarks = landmarks_arr.reshape((1, 1, landmarks_arr.shape[0]))
 
             # if landmarks_arr.shape == (0,):
@@ -63,5 +68,5 @@ class Camera:
     def update(self):
         self.parent.update()
 
-    def release_camera(self):
+    def release(self):
         self.camera.release()
