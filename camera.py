@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 from feature_extraction import HandLandmarksDetector
 
-
 class Camera:
     def __init__(self, parent):
         self.parent = parent
@@ -33,16 +32,7 @@ class Camera:
             # Reshaping the extracted landmarks to fit into the model
             landmarks_arr = np.array(landmarks)
             print(landmarks_arr.shape)
-            reshaped_landmarks = landmarks_arr.reshape((1, 1, landmarks_arr.shape[0]))
-
-            # if landmarks_arr.shape == (0,):
-            #     print("Align two hands to the camera.")
-            #
-            # elif landmarks.arr.shape == (63,):
-            #     print("Use your two hands to detect proper wrist positions")
-            #
-            # else:
-            #     print("You're using your two hands.")
+            # reshaped_landmarks = landmarks_arr.reshape((1, 1, landmarks_arr.shape[0]))
 
             frame_with_landmarks = cv2.cvtColor(frame_rgb, cv2.COLOR_BGR2RGB)
             h, w, ch = frame_with_landmarks.shape
