@@ -1,13 +1,16 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget,  QLineEdit, QLabel, QPushButton, QMessageBox
-from PyQt5.QtGui import QPainter, QColor, QPen, QFont, QPixmap, QIntValidator
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtWidgets import QMainWindow, QGraphicsScene, QGraphicsView, QApplication, QWidget,  QLineEdit, QMessageBox, QScrollArea, QVBoxLayout, QWidget, QLabel
+from PyQt5.QtGui import QPainter, QColor, QPen, QFont, QPixmap, QIntValidator, QImage
+from PyQt5.QtCore import Qt, QRect, QThread, pyqtSignal
 from plyer import notification
+from feature_extraction import HandLandmarksDetector
 import cv2
+import numpy as np
 
 from camera import Camera
 from cam_permission import CamPermission
 from break_time import Break
+from audio import Audio
 from gtts import gTTS
 import os
 
@@ -29,6 +32,9 @@ class MyWindow(QWidget):
 
         # Break
         self.break_handler = Break(self)
+
+        # Audio
+        self.audio = Audio(self)
 
         # Break Time Input
         self.user_input_break = QLineEdit(self)
@@ -69,18 +75,6 @@ class MyWindow(QWidget):
         self.setFixedSize(1200, 720)  # fixed size
 
 
-        # Button to trigger text-to-speech
-        self.text_to_speech_button = QPushButton("", self)
-       # painter.drawPixmap(133, self.height() - 88, 32, 30, image_audio)
-        self.text_to_speech_button.setGeometry(133, self.height() - 88, 32, 30)
-        self.text_to_speech_button.clicked.connect(self.speak_text)
-
-    def speak_text(self):
-        text_to_speak = "Prolonged incorrect wrist position! Correct your position immediately."
-        tts = gTTS(text=text_to_speak, lang='en')
-        tts.save("audio.mp3")
-        os.system("start audio.mp3")
-
     def paintEvent(self, event):
         painter = QPainter(self)
 
@@ -94,17 +88,6 @@ class MyWindow(QWidget):
         painter.setBrush(QColor("#828E82"))
         painter.drawRect(self.width() - 450, 0, 450, self.height())
 
-        # AUDIO
-        painter.setBrush(QColor(74, 73, 73, int(0.23 * 255)))
-        audio_pane = QRect(105, self.height() - 115, self.width() - 577, 85)
-        radius = 13  # Set the radius for rounded corners
-        painter.drawRoundedRect(audio_pane, radius, radius)
-
-        # small square (box of audio icon)
-        painter.setBrush(QColor("#FBF0F3"))
-        square_audio_box = QRect(123, self.height() - 97, 50, 50)
-        radius = 8  # Set the radius for rounded corners
-        painter.drawRoundedRect(square_audio_box, radius, radius)
 
         # WORKTIME
         painter.setBrush(QColor("#FFFFFF"))
@@ -230,12 +213,6 @@ class MyWindow(QWidget):
         painter.setPen(QColor("#6A6969"))
         painter.drawText(105, 71, 450, 270, Qt.AlignLeft, "Prevent Carpal Tunnel Syndrome")
 
-        # Audio Line
-        font_title = QFont()
-        font_title.setPointSize(9)
-        painter.setFont(font_title)
-        painter.setPen(QColor("#303030"))
-        painter.drawText(200, self.height()-85, 450, 270, Qt.AlignLeft, "Prolonged incorrect wrist position! Correct your position immediately.")
 
         # Don't Wrist It (Logo)
         font_title2 = QFont()
@@ -331,7 +308,6 @@ class MyWindow(QWidget):
         painter.setPen(QColor("#303030"))
         painter.drawText(122, 540, 450, 270, Qt.AlignLeft, "This section displays the")
         painter.drawText(122, 557, 450, 270, Qt.AlignLeft, "status of your wrist position")
-        #painter.drawText(122, 562, 450, 270, Qt.AlignLeft, "position.")
 
         # Reminder
         font_title = QFont()
@@ -370,16 +346,17 @@ class MyWindow(QWidget):
         else:
             self.camera.cam_draw(painter)
 
+        # Audio
+        self.audio.audio_container(painter)
+        self.audio.audio_holder(painter)
+
+
 
         #------------IMAGES----------
         # image LOGO
         image_logo = QPixmap("./src/logo.png")
         image_logo_x = self.width() - 450 + (450 - image_logo.width()) // 2
         painter.drawPixmap(image_logo_x, -70, image_logo.width(), image_logo.height(), image_logo)
-
-        # Image AUDIO
-        image_audio = QPixmap("./src/audio_icon.png")
-        painter.drawPixmap(133, self.height()- 88, 32,30,image_audio)
 
         # Image GREEN clock
         image_green = QPixmap("./src/green_clock.png")
@@ -413,6 +390,11 @@ class MyWindow(QWidget):
                 else:
                     self.camera.cam_placeholder = True
                     print("Camera access denied.")
+
+            audio_pane = QRect(105, self.height() - 115, self.width() - 577, 85)
+            if audio_pane.contains(click_pos):
+                # Clicked on the audio_pane, play audio
+                self.audio.speak_text()
 
         super().mousePressEvent(event)
 
